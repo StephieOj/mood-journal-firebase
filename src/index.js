@@ -97,7 +97,9 @@ onAuthStateChanged(auth, (user) => {
         showLoggedInView()
         showProfilePicture(userProfilePictureEl, user)
         showUserGreeting(userGreetingEl, user)
-        fetchInRealtimeAndRenderPostsFromDB(user)
+    
+        updateFilterButtonStyle(allFilterButtonEl)
+        fetchAllPosts(user)
     } else {
         showLoggedOutView()
     }
@@ -166,12 +168,9 @@ async function addPostToDB(postBody, user) {
     }
 }
 
-function fetchInRealtimeAndRenderPostsFromDB(user) {
-    const postsRef = collection(db, collectionName)
+function fetchInRealtimeAndRenderPostsFromDB(query, user) {
     
-    const q = query(postsRef, where("uid", "==", user.uid), orderBy("createdAt", "desc"))
-    
-    onSnapshot(q, (querySnapshot) => {
+    onSnapshot(query, (querySnapshot) => {
         clearAll(postsEl)
         
         querySnapshot.forEach((doc) => {
@@ -180,6 +179,73 @@ function fetchInRealtimeAndRenderPostsFromDB(user) {
     })
 }
 
+function fetchTodayPosts(user) {
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+    
+    const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
+    
+    const postsRef = collection(db, collectionName)
+
+    const q = query(postsRef, 
+                    where("uid", "==", user.uid),
+                    where("createdAt", ">=", startOfDay),
+                    where("createdAt", "<=", endOfDay),
+                    orderBy("createdAt", "desc"))
+
+    fetchInRealtimeAndRenderPostsFromDB(q, user)
+    
+}
+
+function fetchWeekPosts(user){
+
+ const startOfWeek = new Date()
+    startOfWeek.setHours(0, 0, 0, 0)
+    
+    if (startOfWeek.getDay() === 0) { // If today is Sunday
+        startOfWeek.setDate(startOfWeek.getDate() - 6) // Go to previous Monday
+    } else {
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1)
+    }
+       const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
+    
+    const postsRef = collection(db, collectionName)
+    
+    const q = query(postsRef, where("uid", "==", user.uid),
+                              where("createdAt", ">=", startOfWeek),
+                              where("createdAt", "<=", endOfDay),
+                              orderBy("createdAt", "desc"))
+                              
+    fetchInRealtimeAndRenderPostsFromDB(q, user)
+}
+
+function fetchMonthPosts(user) {
+    const startOfMonth = new Date()
+    startOfMonth.setHours(0, 0, 0, 0)
+    startOfMonth.setDate(1)
+
+    const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
+
+	const postsRef = collection(db, collectionName)
+    
+    const q = query(postsRef, where("uid", "==", user.uid),
+                              where("createdAt", ">=", startOfMonth),
+                              where("createdAt", "<=", endOfDay),
+                              orderBy("createdAt", "desc"))
+
+    fetchInRealtimeAndRenderPostsFromDB(q, user)
+}
+
+function fetchAllPosts(user) {
+    const postsRef = collection(db, collectionName)
+    const q = query(postsRef, where("uid", "==", user.uid),
+                              orderBy("createdAt", "desc"))
+    
+    fetchInRealtimeAndRenderPostsFromDB(q, user)
+}
 /* == Functions - UI Functions == */
 
 function renderPost(postsEl, postData) {
@@ -334,6 +400,18 @@ function updateFilterButtonStyle(element) {
     element.classList.add("selected-filter")
 }
 
+function fetchPostsFromPeriod(period, user) {
+    if (period === "today") {
+        fetchTodayPosts(user)
+    } else if (period === "week") {
+        fetchWeekPosts(user)
+    } else if (period === "month") {
+        fetchMonthPosts(user)
+    } else {
+        fetchAllPosts(user)
+    }
+}
+
 function selectFilter(event) {
     const user = auth.currentUser
     
@@ -346,4 +424,6 @@ function selectFilter(event) {
     resetAllFilterButtons(filterButtonEls)
     
     updateFilterButtonStyle(selectedFilterElement)
+    
+    fetchPostsFromPeriod(selectedFilterPeriod, user)
 }
