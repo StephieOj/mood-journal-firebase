@@ -18,7 +18,6 @@ import { getFirestore,
          orderBy } from "firebase/firestore"
 
 /* === Firebase Setup === */
-/* IMPORTANT: Replace this with your own firebaseConfig when doing challenges */
 const firebaseConfig = {
     apiKey: "AIzaSyBkudtUtigMl79AQvmkMr9JU_us89p05mk",
     authDomain: "mood-journal-e6978.firebaseapp.com",
@@ -161,7 +160,7 @@ async function addPostToDB(postBody, user) {
 function fetchInRealtimeAndRenderPostsFromDB(user) {
     const postsRef = collection(db, collectionName)
     
-    const q = query(postsRef, where("uid", "==", user.uid),)
+    const q = query(postsRef, where("uid", "==", user.uid), orderBy("createdAt", "desc"))
     
     onSnapshot(q, (querySnapshot) => {
         clearAll(postsEl)
