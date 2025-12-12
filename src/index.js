@@ -55,6 +55,10 @@ const moodEmojiEls = document.getElementsByClassName("mood-emoji-btn")
 const textareaEl = document.getElementById("post-input")
 const postButtonEl = document.getElementById("post-btn")
 
+const allFilterButtonEl = document.getElementById("all-filter-btn")
+
+const filterButtonEls = document.getElementsByClassName("filter-btn")
+
 const postsEl = document.getElementById("posts")
 
 /* == UI - Event Listeners == */
@@ -69,6 +73,11 @@ signOutButtonEl.addEventListener("click", authSignOut)
 for (let moodEmojiEl of moodEmojiEls) {
     moodEmojiEl.addEventListener("click", selectMood)
 }
+
+for (let filterButtonEl of filterButtonEls) {
+    filterButtonEl.addEventListener("click", selectFilter)
+}
+
 
 postButtonEl.addEventListener("click", postButtonPressed)
 
@@ -239,7 +248,7 @@ function showProfilePicture(imgElement, user) {
     if (photoURL) {
         imgElement.src = photoURL
     } else {
-        imgElement.src = "assets/images/default-profile-picture.jpeg"
+        imgElement.src = "public/assets/images/default-profile-picture.jpeg"
     }
 }
 
@@ -257,7 +266,7 @@ function showUserGreeting(element, user) {
 
 function displayDate(firebaseDate) {
     if (!firebaseDate) {
-        return "Date processing"
+        return " "
     }
     
     const date = firebaseDate.toDate()
@@ -311,4 +320,30 @@ function resetAllMoodElements(allMoodElements) {
 
 function returnMoodValueFromElementId(elementId) {
     return Number(elementId.slice(5))
+}
+
+/* == Functions - UI Functions - Date Filters == */
+
+function resetAllFilterButtons(allFilterButtons) {
+    for (let filterButtonEl of allFilterButtons) {
+        filterButtonEl.classList.remove("selected-filter")
+    }
+}
+
+function updateFilterButtonStyle(element) {
+    element.classList.add("selected-filter")
+}
+
+function selectFilter(event) {
+    const user = auth.currentUser
+    
+    const selectedFilterElementId = event.target.id
+    
+    const selectedFilterPeriod = selectedFilterElementId.split("-")[0]
+    
+    const selectedFilterElement = document.getElementById(selectedFilterElementId)
+    
+    resetAllFilterButtons(filterButtonEls)
+    
+    updateFilterButtonStyle(selectedFilterElement)
 }
